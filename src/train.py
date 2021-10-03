@@ -14,6 +14,7 @@ from PIL import Image
 import numpy as np
 from torch import nn
 from fire import Fire
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 
 LOGGER = logging.getLogger(__name__)
 DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -219,10 +220,6 @@ class Model(pl.LightningModule):
     #     return loss
 
 
-def finetune(logs_dir: str = os.getcwd(), max_epochs: int = 300) -> None:
-    return NotImplementedError
-
-
 class Cli:
     """Command line interface"""
     @staticmethod
@@ -241,17 +238,20 @@ class Cli:
         model = Model(lr=1e-3)
 
         # initialize callbacks
-        # callbacks = [
-        #     EarlyStopping(monitor='train_loss', patience=20),
-        #     LearningRateMonitor(logging_interval='step'),
-        #     LogClassifierImages(batch_to_plot=(0,)),
-        #     ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_Accuracy", mode='max'),
-        #     LogConfusionMatrix()
-        # ]
+        callbacks = [
+            EarlyStopping(monitor='train_loss', patience=20),
+            LearningRateMonitor(logging_interval='step'),
+            ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_loss", mode='max')
+        ]
 
         # initialize trainer and run it
-        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=torch.cuda.device_count(), max_epochs=max_epochs)
+        gpus = torch.cuda.device_count()
+        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=callbacks, max_epochs=max_epochs)
         trainer.fit(model, ds)
+
+    @staticmethod
+    def finetune(logs_dir: str = os.getcwd(), max_epochs: int = 300) -> None:
+        return NotImplementedError
 
 
 def testing():
