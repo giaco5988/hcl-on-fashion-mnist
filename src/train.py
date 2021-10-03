@@ -366,7 +366,7 @@ class Cli:
         callbacks = [
             EarlyStopping(monitor='train_loss', patience=20),
             LearningRateMonitor(logging_interval='step'),
-            ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_loss", mode='max')
+            ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_Accuracy", mode='max')
         ]
 
         # initialize trainer and run it
