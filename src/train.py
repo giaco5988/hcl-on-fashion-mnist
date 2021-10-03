@@ -16,6 +16,7 @@ from torch import nn
 from fire import Fire
 
 LOGGER = logging.getLogger(__name__)
+DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class FashionMNISTPair(FashionMNIST):
@@ -132,7 +133,7 @@ class Model(pl.LightningModule):
         neg = torch.exp(torch.mm(out, out.t().contiguous()) / temperature)
         # old_neg = neg.clone()
         batch_size = out_1.shape[0]
-        mask = Model.get_negative_mask(batch_size)
+        mask = Model.get_negative_mask(batch_size).to(DEV)
         neg = neg.masked_select(mask).view(2 * batch_size, -1)
 
         # pos score
