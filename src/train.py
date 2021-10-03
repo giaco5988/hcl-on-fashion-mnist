@@ -18,6 +18,7 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, Mode
 
 LOGGER = logging.getLogger(__name__)
 DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+pl.seed_everything(1234)  # set seed
 
 
 class FashionMNISTPair(FashionMNIST):
@@ -230,9 +231,6 @@ class Cli:
         :param max_epochs: max number of epochs
         :return: None
         """
-        # set seed
-        pl.seed_everything(1234)
-
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair)
         model = Model(lr=1e-3)
