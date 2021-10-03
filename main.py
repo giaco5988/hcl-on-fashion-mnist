@@ -50,16 +50,9 @@ class Cli:
         ds = FashionMNISTDataModule(ds=FashionMNISTPair)
         model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path))
 
-        # initialize callbacks
-        callbacks = [
-            EarlyStopping(monitor='train_loss', patience=20),
-            LearningRateMonitor(logging_interval='step'),
-            ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_Accuracy", mode='max')
-        ]
-
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
-        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=callbacks, max_epochs=max_epochs)
+        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=CALLBACKS, max_epochs=max_epochs)
         trainer.fit(model, ds)
 
 
