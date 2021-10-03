@@ -7,7 +7,8 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, Mode
 from torch.utils.data import DataLoader
 from fire import Fire
 
-from hcl.train import FashionMNISTDataModule, FashionMNISTPair, Model, Finetuner
+from hcl.model import Model, Finetuner
+from hcl.dataset import FashionMNISTPair, FashionMNISTDataModule
 
 LOGGER = logging.getLogger(__name__)
 CALLBACKS = [
