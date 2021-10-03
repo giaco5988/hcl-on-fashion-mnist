@@ -143,11 +143,9 @@ class HclModel(pl.LightningModule):
         self.feature_labels = None
 
     def on_test_start(self) -> None:
-        """"""
         self.on_validation_start()
 
     def on_test_end(self) -> None:
-        """"""
         self.on_validation_end()
 
     def forward(self, input_tensor: torch.Tensor):
