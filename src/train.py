@@ -226,6 +226,33 @@ class Model(pl.LightningModule):
     #     return loss
 
 
+class Finetuner(pl.LightningModule):
+    """"""
+    def __init__(self, lr: float, pretrained_path: str, num_classes: int = 10):
+        """"""
+        super().__init__()
+        self.lr = lr
+
+        # load base model
+        model = Model(lr=self.lr)
+        model.load_state_dict(torch.load(pretrained_path, map_location=DEV))
+
+        # encoder, classifier and loss
+        self.encoder = model.encoder
+        self.fc = nn.Linear(2048, num_classes, bias=True)
+        self.loss = nn.CrossEntropyLoss()
+
+        # save hyperparameters
+        self.save_hyperparameters()
+
+    def forward(self, x):
+        """forward pass"""
+        x = self.encoder(x)
+        feature = torch.flatten(x, start_dim=1)
+        out = self.fc(feature)
+        return out
+
+
 class Cli:
     """Command line interface"""
     @staticmethod
