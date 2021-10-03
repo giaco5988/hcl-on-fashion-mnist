@@ -40,13 +40,16 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                  data_dir: str = os.path.join(os.getcwd(), "FashionMNIST_data"),
                  batch_size=512,
                  num_workers: int = mp.cpu_count(),
-                 train_val_split: Tuple[int, int] = (57000, 3000)):
+                 splits: Tuple[int, int] = (57000, 2000, 1000),
+                 use_labels: bool = False):
         """
         Initialization
         :param data_dir: raw data folder (this dataset https://www.nature.com/articles/sdata2016106)
         :param im_size: image size
         :param batch_size: batch size
         :param num_workers: number of workers to load the data
+        :param splits: dataset splits
+        :param use_labels: if True, use labels for training
         """
         super().__init__()
         self.batch_size = batch_size
@@ -63,9 +66,11 @@ class FashionMNISTDataModule(pl.LightningDataModule):
 
         # create train-val-test dataset
         ds_train_val = ds(root=data_dir, transform=train_transforms, download=True)
-        assert sum(train_val_split) == len(ds_train_val), f"train-val splits should add up to {len(ds_train_val)}"
-        ds_train, ds_val = random_split(dataset=ds_train_val, lengths=train_val_split)
+        ds_train_unlabeled, ds_train_labels, ds_val = random_split(dataset=ds_train_val,
+                                                                   lengths=splits,
+                                                                   generator=torch.Generator().manual_seed(42))
         ds_test = ds(root=data_dir, transform=test_transforms, download=True, train=False)
+        ds_train = ds_train_labels if use_labels else ds_train_unlabeled
         self.ds = {'train': ds_train, 'val': ds_val, 'test': ds_test}
 
     def train_dataloader(self):
@@ -98,7 +103,7 @@ class Model(pl.LightningModule):
         self.encoder = []
         for name, module in base.named_children():
             if name == 'conv1':
-                module = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False)
+                module = nn.Conv2d(1, 64, kernel_size=(3, 3), padding=1, bias=False)
             if not isinstance(module, nn.Linear) and not isinstance(module, nn.MaxPool2d):
                 self.encoder.append(module)
         self.encoder = nn.Sequential(*self.encoder)
