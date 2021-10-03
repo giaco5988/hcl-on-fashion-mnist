@@ -57,6 +57,6 @@ NOTE: results are saved on `lightning_logs` folder.
 * Train for longer time
 * Add callbacks to plot inference on one batch during training
 * Try different models for the base model
-* Hyperparameter search, use different training and model parameters
+* Hyperparameter search, use different training and model parameters (e.g. lr, batch size, feature dimension)
 * Add tests
 * Add dvc-tracking to track data and pipelines
