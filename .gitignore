@@ -1,0 +1,4 @@
+.idea
+venv_ntropy
+**/*pycache*
+notebooks/.ipynb_checkpoints
