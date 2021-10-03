@@ -262,7 +262,7 @@ class Model(pl.LightningModule):
         # log data
         _, class_idx = torch.max(pred_scores, 1)
         metrics = {f'val_{key}': value for key, value in self.metrics(class_idx, targets).items()}
-        self.log_dict({'val_loss': loss, **metrics}, on_step=True, on_epoch=True, prog_bar=False, logger=True)
+        self.log_dict({'val_loss': loss, **metrics}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
 
         return loss
 
@@ -273,7 +273,7 @@ class Model(pl.LightningModule):
         # log data
         _, class_idx = torch.max(pred_scores, 1)
         metrics = {f'test_{key}': value for key, value in self.metrics(class_idx, targets).items()}
-        self.log_dict({'test_loss': loss, **metrics}, on_step=True, on_epoch=True, prog_bar=False, logger=True)
+        self.log_dict({'test_loss': loss, **metrics}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
 
         return loss
 
