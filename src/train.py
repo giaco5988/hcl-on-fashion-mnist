@@ -41,7 +41,7 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                  ds: Type[FashionMNIST],
                  im_size: Union[Tuple[int, int], int] = 28,
                  data_dir: str = os.path.join(os.getcwd(), "FashionMNIST_data"),
-                 batch_size=512,
+                 batch_size=128,
                  num_workers: int = mp.cpu_count(),
                  splits: Tuple[int, int] = (57000, 2000, 1000),
                  supervised: bool = False):
