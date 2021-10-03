@@ -57,7 +57,7 @@ class FashionMNISTDataModule(pl.LightningDataModule):
 
         # transforms
         train_transforms = transforms.Compose([
-            transforms.RandomResizedCrop(im_size),
+            transforms.RandomResizedCrop(im_size, scale=(.5, 1.0)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.ToTensor()
         ])
