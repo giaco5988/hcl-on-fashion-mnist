@@ -210,7 +210,7 @@ class Model(pl.LightningModule):
         out = self.head(feature)
         return nn_func.normalize(feature, dim=-1), nn_func.normalize(out, dim=-1)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
         """training step"""
         # unpack batch
         im_1, im_2, _ = batch
@@ -288,13 +288,14 @@ class Finetuner(pl.LightningModule):
         # load base model
         model = Model(lr=self.lr)
         model.load_state_dict(torch.load(pretrained_path, map_location=DEV))
-        for param in model.e.parameters():
+        for param in model.encoder.parameters():
             param.requires_grad = train_encoder
 
-        # encoder, classifier and loss
+        # encoder, classifier, loss and metrics
         self.encoder = model.encoder
         self.fc = nn.Linear(2048, num_classes, bias=True)
         self.loss = nn.CrossEntropyLoss()
+        self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
 
         # save hyperparameters
         self.save_hyperparameters()
@@ -304,7 +305,47 @@ class Finetuner(pl.LightningModule):
         x = self.encoder(x)
         feature = torch.flatten(x, start_dim=1)
         out = self.fc(feature)
+
         return out
+
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        """training step"""
+        im, _, target = batch  # unpack batch
+        pred = self(im)  # inference
+        loss = self.loss(input=pred, target=target)  # compute loss
+
+        # log data
+        _, class_idx = torch.max(pred, 1)
+        metrics = {f'train_{key}': value for key, value in self.metrics(class_idx, target).items()}
+        self.log_dict({'train_loss': loss, **metrics}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        """training step"""
+        im, _, target = batch  # unpack batch
+        pred = self(im)  # inference
+        loss = self.loss(input=pred, target=target)  # compute loss
+
+        # log data
+        _, class_idx = torch.max(pred, 1)
+        metrics = {f'val_{key}': value for key, value in self.metrics(class_idx, target).items()}
+        self.log_dict({'val_loss': loss, **metrics}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+
+        return loss
+
+    def test_step(self, batch, batch_idx) -> torch.Tensor:
+        """training step"""
+        im, _, target = batch  # unpack batch
+        pred = self(im)  # inference
+        loss = self.loss(input=pred, target=target)  # compute loss
+
+        # log data
+        _, class_idx = torch.max(pred, 1)
+        metrics = {f'test_{key}': value for key, value in self.metrics(class_idx, target).items()}
+        self.log_dict({'test_loss': loss, **metrics}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+
+        return loss
 
 
 class Cli:
@@ -330,7 +371,7 @@ class Cli:
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
-        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=callbacks, max_epochs=max_epochs, limit_train_batches=2)
+        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=callbacks, max_epochs=max_epochs)
         trainer.fit(model, ds)
 
     @staticmethod
