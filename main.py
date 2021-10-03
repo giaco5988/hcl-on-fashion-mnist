@@ -10,6 +10,7 @@ from fire import Fire
 from hcl.model import Model, Finetuner
 from hcl.dataset import FashionMNISTPair, FashionMNISTDataModule
 
+pl.seed_everything(1234)  # set seed
 LOGGER = logging.getLogger(__name__)
 CALLBACKS = [
     EarlyStopping(monitor='train_loss', patience=20),

@@ -14,7 +14,6 @@ from tqdm.auto import tqdm
 
 LOGGER = logging.getLogger(__name__)
 DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-pl.seed_everything(1234)  # set seed
 
 
 class Model(pl.LightningModule):
