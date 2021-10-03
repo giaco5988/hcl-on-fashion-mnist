@@ -7,7 +7,7 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, Mode
 from torch.utils.data import DataLoader
 from fire import Fire
 
-from hcl.model import Model, Finetuner
+from hcl.model import HclModel, Finetuner
 from hcl.dataset import FashionMNISTPair, FashionMNISTDataModule
 
 pl.seed_everything(1234)  # set seed
@@ -31,7 +31,7 @@ class Cli:
         """
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair)
-        model = Model(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=16))
+        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=16))
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()

@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-class Model(pl.LightningModule):
+class HclModel(pl.LightningModule):
     """"""
     def __init__(self,
                  lr: float,
@@ -60,7 +60,7 @@ class Model(pl.LightningModule):
 
         # loss and metrics
         self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
-        self.loss = Model.criterion
+        self.loss = HclModel.criterion
 
         # save hyperparameters
         self.save_hyperparameters()
@@ -83,7 +83,7 @@ class Model(pl.LightningModule):
         neg = torch.exp(torch.mm(out, out.t().contiguous()) / temperature)
         # old_neg = neg.clone()
         batch_size = out_1.shape[0]
-        mask = Model.get_negative_mask(batch_size).to(DEV)
+        mask = HclModel.get_negative_mask(batch_size).to(DEV)
         neg = neg.masked_select(mask).view(2 * batch_size, -1)
 
         # pos score
@@ -206,7 +206,7 @@ class Finetuner(pl.LightningModule):
         self.lr = lr
 
         # load base model
-        model = Model(lr=self.lr)
+        model = HclModel(lr=self.lr)
         model.load_state_dict(torch.load(pretrained_path, map_location=DEV))
         for param in model.encoder.parameters():
             param.requires_grad = train_encoder
