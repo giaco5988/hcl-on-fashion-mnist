@@ -293,12 +293,19 @@ class Finetuner(pl.LightningModule):
 
         # encoder, classifier, loss and metrics
         self.encoder = model.encoder
-        self.fc = nn.Linear(2048, num_classes, bias=True)
+        self.fc = nn.Linear(model.head[0].in_features, num_classes, bias=True)
         self.loss = nn.CrossEntropyLoss()
         self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
 
         # save hyperparameters
         self.save_hyperparameters()
+
+    def configure_optimizers(self):
+        """configure optimizers"""
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, weight_decay=1e-6)
+        lr_scheduler = {'scheduler': ReduceLROnPlateau(optimizer, patience=10, factor=.5), "monitor": "train_loss"}
+
+        return [optimizer], [lr_scheduler]
 
     def forward(self, x):
         """forward pass"""
@@ -375,8 +382,29 @@ class Cli:
         trainer.fit(model, ds)
 
     @staticmethod
-    def finetune(logs_dir: str = os.getcwd(), max_epochs: int = 300) -> None:
-        return NotImplementedError
+    def finetune(pretrained_path: str, logs_dir: str = os.getcwd(), max_epochs: int = 300) -> None:
+        """
+        Train binary classifier for solar panel detection
+        :param pretrained_path: where to load pretrained model (relative to cwd)
+        :param logs_dir: where to save the logs
+        :param max_epochs: max number of epochs
+        :return: None
+        """
+        # initialize data and model
+        ds = FashionMNISTDataModule(ds=FashionMNISTPair, batch_size=256)
+        model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path))
+
+        # initialize callbacks
+        callbacks = [
+            EarlyStopping(monitor='train_loss', patience=20),
+            LearningRateMonitor(logging_interval='step'),
+            ModelCheckpoint(filename="max_val_acc_checkpoint", monitor="val_Accuracy", mode='max')
+        ]
+
+        # initialize trainer and run it
+        gpus = torch.cuda.device_count()
+        trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=callbacks, max_epochs=max_epochs)
+        trainer.fit(model, ds)
 
 
 if __name__ == '__main__':
