@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as nn_func
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torchvision
-from torchmetrics import Accuracy, Precision, Recall, MetricCollection
+from torchmetrics import Accuracy, MetricCollection
 import pytorch_lightning as pl
 import numpy as np
 from torch import nn
@@ -68,7 +68,7 @@ class HclModel(pl.LightningModule):
         )
 
         # loss and metrics
-        self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
+        self.metrics = MetricCollection([Accuracy()])
         self.loss = self.criterion
 
         # save hyperparameters
@@ -246,7 +246,7 @@ class Finetuner(pl.LightningModule):
         self.encoder = model.encoder
         self.fc = nn.Linear(model.head[0].in_features, num_classes, bias=True)
         self.loss = nn.CrossEntropyLoss()
-        self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
+        self.metrics = MetricCollection([Accuracy()])
 
         # save hyperparameters
         self.save_hyperparameters()
