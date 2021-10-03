@@ -224,9 +224,15 @@ class HclModel(pl.LightningModule):
 
 
 class Finetuner(pl.LightningModule):
-    """"""
+    """Fine tune HCL model to become a classifier"""
     def __init__(self, lr: float, pretrained_path: str, num_classes: int = 10, train_encoder: bool = False):
-        """"""
+        """
+        Initialize classifier
+        :param lr: learning rate
+        :param pretrained_path: path of pretrained HCL model
+        :param num_classes: number of classes
+        :param train_encoder: if True, train encoder
+        """
         super().__init__()
         self.lr = lr
 
