@@ -54,6 +54,7 @@ NOTE: results are saved on `lightning_logs` folder.
 ### Results
 
 ### Next Steps
+* Train for longer time
 * Add callbacks to plot inference on one batch during training
 * Try different models for the base model
 * Hyperparameter search, use different training and model parameters
