@@ -37,6 +37,7 @@ class Cli:
         gpus = torch.cuda.device_count()
         trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=CALLBACKS, max_epochs=max_epochs)
         trainer.fit(model, ds)
+        trainer.test(model=model, datamodule=ds)
 
     @staticmethod
     def finetune(pretrained_path: str, logs_dir: str = os.getcwd(), max_epochs: int = 300) -> None:
@@ -55,6 +56,7 @@ class Cli:
         gpus = torch.cuda.device_count()
         trainer = pl.Trainer(default_root_dir=logs_dir, gpus=gpus, callbacks=CALLBACKS, max_epochs=max_epochs)
         trainer.fit(model, ds)
+        trainer.test(model=model, datamodule=ds)
 
 
 if __name__ == "__main__":
