@@ -3,7 +3,7 @@ from typing import Tuple, Union, Type
 import logging
 import multiprocessing as mp
 
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, random_split, ConcatDataset
 import torch
 import torch.nn.functional as nn_func
 import torchvision
@@ -41,19 +41,20 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                  batch_size=512,
                  num_workers: int = mp.cpu_count(),
                  splits: Tuple[int, int] = (57000, 2000, 1000),
-                 use_labels: bool = False):
+                 supervised: bool = False):
         """
         Initialization
         :param data_dir: raw data folder (this dataset https://www.nature.com/articles/sdata2016106)
         :param im_size: image size
         :param batch_size: batch size
         :param num_workers: number of workers to load the data
-        :param splits: dataset splits
-        :param use_labels: if True, use labels for training
+        :param splits: dataset splits (unlabeled_train, labeled_train, val)
+        :param supervised: if True, use only labels for training (supervised learning)
         """
         super().__init__()
         self.batch_size = batch_size
         self._num_workers = num_workers
+        self._supervised = supervised
 
         # transforms
         train_transforms = transforms.Compose([
@@ -70,12 +71,18 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                                                                    lengths=splits,
                                                                    generator=torch.Generator().manual_seed(42))
         ds_test = ds(root=data_dir, transform=test_transforms, download=True, train=False)
-        ds_train = ds_train_labels if use_labels else ds_train_unlabeled
-        self.ds = {'train': ds_train, 'val': ds_val, 'test': ds_test}
+        self.ds = {
+            'train_unlabeled+labeled': ConcatDataset([ds_train_unlabeled, ds_train_labels]),
+            'train_labeled': ds_train_labels,
+            'val': ds_val,
+            'test': ds_test
+        }
 
     def train_dataloader(self):
         """get training data loader"""
-        return DataLoader(self.ds['train'], batch_size=self.batch_size, num_workers=self._num_workers, shuffle=True)
+        name = 'train_labeled' if self._supervised else 'train_unlabeled+labeled'
+
+        return DataLoader(self.ds[name], batch_size=self.batch_size, num_workers=self._num_workers, shuffle=True)
 
     def val_dataloader(self):
         """get validation data loader"""
@@ -200,17 +207,40 @@ class Model(pl.LightningModule):
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
         """training step"""
         # unpack batch
-        im_1, im_2, _ = batch
+        data, _, target = batch
 
-        # compute loss
-        _, out_1 = self(im_1)
-        _, out_2 = self(im_2)
-        loss = self.loss(out_1, out_2, self.tau_plus, self.beta)
+        # # compute loss
+        # _, out_1 = self(im_1)
+        # _, out_2 = self(im_2)
+        # loss = self.loss(out_1, out_2, self.tau_plus, self.beta)
+        #
+        # # log data
+        # self.log_dict({'val_loss': loss}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+        #
+        # return loss
 
-        # log data
-        self.log_dict({'val_loss': loss}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+        feature, out = self(data)
 
-        return loss
+        # compute cos similarity between each feature vector and feature bank ---> [B, N]
+        sim_matrix = torch.mm(feature, feature_bank)
+        # [B, K]
+        sim_weight, sim_indices = sim_matrix.topk(k=k, dim=-1)
+        # [B, K]
+        sim_labels = torch.gather(feature_labels.expand(data.size(0), -1), dim=-1, index=sim_indices)
+        sim_weight = (sim_weight / temperature).exp()
+
+        # counts for each class
+        one_hot_label = torch.zeros(data.size(0) * k, c, device=sim_labels.device)
+        # [B*K, C]
+        one_hot_label = one_hot_label.scatter(dim=-1, index=sim_labels.view(-1, 1).long(), value=1.0)
+        # weighted score ---> [B, C]
+        pred_scores = torch.sum(one_hot_label.view(data.size(0), -1, c) * sim_weight.unsqueeze(dim=-1), dim=1)
+
+        pred_labels = pred_scores.argsort(dim=-1, descending=True)
+        total_top1 += torch.sum((pred_labels[:, :1] == target.long().unsqueeze(dim=-1)).any(dim=-1).float()).item()
+        total_top5 += torch.sum((pred_labels[:, :5] == target.long().unsqueeze(dim=-1)).any(dim=-1).float()).item()
+        test_bar.set_description('KNN Test Epoch: [{}/{}] Acc@1:{:.2f}% Acc@5:{:.2f}%'
+                                 .format(epoch, epochs, total_top1 / total_num * 100, total_top5 / total_num * 100))
 
     # def test_step(self, batch, batch_idx) -> torch.Tensor:
     #     """It defines the test step"""
