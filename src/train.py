@@ -391,7 +391,7 @@ class Cli:
         :return: None
         """
         # initialize data and model
-        ds = FashionMNISTDataModule(ds=FashionMNISTPair, batch_size=256)
+        ds = FashionMNISTDataModule(ds=FashionMNISTPair)
         model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path))
 
         # initialize callbacks
