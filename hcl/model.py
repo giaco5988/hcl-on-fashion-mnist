@@ -17,7 +17,7 @@ DEV = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 class HclModel(pl.LightningModule):
-    """"""
+    """Hard contrastive learning model"""
     def __init__(self,
                  lr: float,
                  ds_memory: Optional[DataLoader] = None,
@@ -26,7 +26,16 @@ class HclModel(pl.LightningModule):
                  features: int = 512,
                  temperature: float = .5,
                  num_classes: int = 10):
-        """"""
+        """
+        Initialize model
+        :param lr: learning rate
+        :param ds_memory: part of the raining dataset with labels
+        :param tau_plus: prior class probability
+        :param beta: concentration parameter which tunes the level if "hardness"
+        :param features: feature space dimension, where to create contrastive embeddings
+        :param temperature: softmax temperature
+        :param num_classes: number of classes
+        """
         super().__init__()
         self.lr = lr
         self.beta = beta
@@ -60,13 +69,18 @@ class HclModel(pl.LightningModule):
 
         # loss and metrics
         self.metrics = MetricCollection([Accuracy(), Precision(), Recall()])
-        self.loss = HclModel.criterion
+        self.loss = self.criterion
 
         # save hyperparameters
         self.save_hyperparameters()
 
     @staticmethod
     def get_negative_mask(batch_size: int):
+        """
+        Get negative mask
+        :param batch_size: batch size
+        :return: mask
+        """
         negative_mask = torch.ones((batch_size, 2 * batch_size), dtype=bool)
         for i in range(batch_size):
             negative_mask[i, i] = 0
@@ -75,29 +89,34 @@ class HclModel(pl.LightningModule):
         negative_mask = torch.cat((negative_mask, negative_mask), 0)
         return negative_mask
 
-    @staticmethod
-    def criterion(out_1, out_2, tau_plus, beta, temperature: float, estimator: str = 'hard'):
-        """"""
+    def criterion(self, out_1, out_2, estimator: str = 'hard'):
+        """
+        Hard contrastive loss
+        :param out_1: batch of images
+        :param out_2: same batch of images but with different tranforms
+        :param estimator: hard or easy contrast
+        :return: contrastive loss
+        """
         # neg score
         out = torch.cat([out_1, out_2], dim=0)
-        neg = torch.exp(torch.mm(out, out.t().contiguous()) / temperature)
+        neg = torch.exp(torch.mm(out, out.t().contiguous()) / self.temperature)
         # old_neg = neg.clone()
         batch_size = out_1.shape[0]
         mask = HclModel.get_negative_mask(batch_size).to(DEV)
         neg = neg.masked_select(mask).view(2 * batch_size, -1)
 
         # pos score
-        pos = torch.exp(torch.sum(out_1 * out_2, dim=-1) / temperature)
+        pos = torch.exp(torch.sum(out_1 * out_2, dim=-1) / self.temperature)
         pos = torch.cat([pos, pos], dim=0)
 
         # negative samples similarity scoring
         if estimator == 'hard':
             N = batch_size * 2 - 2
-            imp = (beta * neg.log()).exp()
+            imp = (self.beta * neg.log()).exp()
             reweight_neg = (imp * neg).sum(dim=-1) / imp.mean(dim=-1)
-            Ng = (-tau_plus * N * pos + reweight_neg) / (1 - tau_plus)
+            Ng = (-self.tau_plus * N * pos + reweight_neg) / (1 - self.tau_plus)
             # constrain (optional)
-            Ng = torch.clamp(Ng, min=N * np.e ** (-1 / temperature))
+            Ng = torch.clamp(Ng, min=N * np.e ** (-1 / self.temperature))
         elif estimator == 'easy':
             Ng = neg.sum(dim=-1)
         else:

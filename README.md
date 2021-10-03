@@ -49,8 +49,13 @@ Second, let's finetune on the labeled data
 (venv_ntropy) $ python main.py finetune pretrained_path=path/to/pretrained/model
 ```
 
-NOTE: results are saved on `lighting_logs` folder.
+NOTE: results are saved on `lightning_logs` folder.
 
 ### Results
 
 ### Next Steps
+* Add callbacks to plot inference on one batch during training
+* Try different models for the base model
+* Hyperparameter search, use different training and model parameters
+* Add tests
+* Add dvc-tracking to track data and pipelines
