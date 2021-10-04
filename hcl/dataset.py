@@ -1,6 +1,7 @@
 import multiprocessing as mp
 import os
 from typing import Type, Union, Tuple
+import logging
 
 import pytorch_lightning as pl
 import torch
@@ -8,6 +9,8 @@ from PIL import Image
 from torch.utils.data import random_split, ConcatDataset, DataLoader
 from torchvision import transforms
 from torchvision.datasets import FashionMNIST
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FashionMNISTPair(FashionMNIST):
@@ -66,10 +69,13 @@ class FashionMNISTDataModule(pl.LightningDataModule):
             'val': ds_val,
             'test': ds_test
         }
+        for key, val in self.ds.items():
+            LOGGER.info(f"{key} datasets has {len(val)} data-points")
 
     def train_dataloader(self):
         """get training data loader"""
         name = 'train_labeled' if self._supervised else 'train_unlabeled+labeled'
+        LOGGER.info(f'Train dataset is {name}')
 
         return DataLoader(self.ds[name], batch_size=self.batch_size, num_workers=self._num_workers, shuffle=True)
 
