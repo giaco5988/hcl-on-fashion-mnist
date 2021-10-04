@@ -48,7 +48,7 @@ class HclModel(pl.LightningModule):
         self.k_closest = 100
 
         # load base model
-        base = torchvision.models.resnet18(pretrained=False, progress=True)
+        base = torchvision.models.resnet50(pretrained=False, progress=True)
         num_filters = base.fc.in_features
 
         # encoder
