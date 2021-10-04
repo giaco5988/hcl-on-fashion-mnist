@@ -31,7 +31,7 @@ class Cli:
         """
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair)
-        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=16))
+        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled']))
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
