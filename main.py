@@ -31,7 +31,7 @@ class Cli:
         """
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair)
-        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled']))
+        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=512))
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
@@ -50,6 +50,7 @@ class Cli:
         """
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair, supervised=True, batch_size=64)
+        base = HclModel()
         model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path))
 
         # initialize trainer and run it
