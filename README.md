@@ -60,3 +60,5 @@ NOTE: results are saved on `lightning_logs` folder.
 * Hyperparameter search, use different training and model parameters (e.g. lr, batch size, feature dimension)
 * Add tests
 * Add dvc-tracking to track data and pipelines
+* In order to reduce queries to database, can we understand which are the most effective (optimal) labels to query?
+E.g. those which are most difficult to classify. A first try could be to query those with low classification score.
