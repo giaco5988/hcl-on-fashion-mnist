@@ -25,17 +25,17 @@ class FashionMNISTDataModule(pl.LightningDataModule):
     """Solar dataset for classification"""
     def __init__(self,
                  ds: Type[FashionMNIST],
+                 batch_size: int,
                  im_size: Union[Tuple[int, int], int] = 28,
                  data_dir: str = os.path.join(os.getcwd(), "FashionMNIST_data"),
-                 batch_size=128,
                  num_workers: int = mp.cpu_count(),
                  splits: Tuple[int, int] = (57000, 2000, 1000),
                  supervised: bool = False):
         """
         Initialization
         :param data_dir: raw data folder (this dataset https://www.nature.com/articles/sdata2016106)
-        :param im_size: image size
         :param batch_size: batch size
+        :param im_size: image size
         :param num_workers: number of workers to load the data
         :param splits: dataset splits (unlabeled_train, labeled_train, val)
         :param supervised: if True, use only labels for training (supervised learning)
