@@ -100,7 +100,6 @@ class HclModel(pl.LightningModule):
         # neg score
         out = torch.cat([out_1, out_2], dim=0)
         neg = torch.exp(torch.mm(out, out.t().contiguous()) / self.temperature)
-        # old_neg = neg.clone()
         batch_size = out_1.shape[0]
         mask = HclModel.get_negative_mask(batch_size).to(DEV)
         neg = neg.masked_select(mask).view(2 * batch_size, -1)
@@ -111,19 +110,18 @@ class HclModel(pl.LightningModule):
 
         # negative samples similarity scoring
         if estimator == 'hard':
-            N = batch_size * 2 - 2
+            n_ = batch_size * 2 - 2
             imp = (self.beta * neg.log()).exp()
-            reweight_neg = (imp * neg).sum(dim=-1) / imp.mean(dim=-1)
-            Ng = (-self.tau_plus * N * pos + reweight_neg) / (1 - self.tau_plus)
-            # constrain (optional)
-            Ng = torch.clamp(Ng, min=N * np.e ** (-1 / self.temperature))
+            re_weight_neg = (imp * neg).sum(dim=-1) / imp.mean(dim=-1)
+            negative = (-self.tau_plus * n_ * pos + re_weight_neg) / (1 - self.tau_plus)
+            negative = torch.clamp(negative, min=n_ * np.e ** (-1 / self.temperature))  # constrain (optional)
         elif estimator == 'easy':
-            Ng = neg.sum(dim=-1)
+            negative = neg.sum(dim=-1)
         else:
             raise Exception('Invalid estimator selected. Please use any of [hard, easy]')
 
         # contrastive loss
-        loss = (- torch.log(pos / (pos + Ng))).mean()
+        loss = (- torch.log(pos / (pos + negative))).mean()
 
         return loss
 
@@ -163,7 +161,7 @@ class HclModel(pl.LightningModule):
         # compute loss
         _, out_1 = self(im_1)
         _, out_2 = self(im_2)
-        loss = self.loss(out_1, out_2, self.tau_plus, self.beta, self.temperature)
+        loss = self.loss(out_1, out_2)
 
         # log data
         self.log_dict({'train_loss': loss}, on_step=False, on_epoch=True, prog_bar=False, logger=True)
@@ -185,7 +183,7 @@ class HclModel(pl.LightningModule):
         # compute loss
         feature, out = self(data)
         _, out_2 = self(data_2)
-        loss = self.loss(out, out_2, self.tau_plus, self.beta, temperature=self.temperature)
+        loss = self.loss(out, out_2)
 
         # compute cos similarity between each feature vector and feature bank ---> [B, N]
         sim_matrix = torch.mm(feature, self.feature_bank)  # [B, K]
@@ -194,9 +192,9 @@ class HclModel(pl.LightningModule):
         sim_weight = (sim_weight / self.temperature).exp()
 
         # counts for each class
-        one_hot_label = torch.zeros(data.size(0) * self.k_closest, self.num_classes, device=sim_labels.device)  # [B*K, C]
-        one_hot_label = one_hot_label.scatter(dim=-1, index=sim_labels.view(-1, 1).long(), value=1.0)  # weighted score ---> [B, C]
-        pred_scores = torch.sum(one_hot_label.view(data.size(0), -1, self.num_classes) * sim_weight.unsqueeze(dim=-1), dim=1)
+        one_hot = torch.zeros(data.size(0) * self.k_closest, self.num_classes, device=sim_labels.device)  # [B*K, C]
+        one_hot = one_hot.scatter(dim=-1, index=sim_labels.view(-1, 1).long(), value=1.0)  # weighted score ---> [B, C]
+        pred_scores = torch.sum(one_hot.view(data.size(0), -1, self.num_classes) * sim_weight.unsqueeze(dim=-1), dim=1)
 
         return loss, pred_scores, target
 
