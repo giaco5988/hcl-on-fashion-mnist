@@ -30,8 +30,8 @@ class Cli:
         :return: None
         """
         # initialize data and model
-        ds = FashionMNISTDataModule(ds=FashionMNISTPair)
-        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=512))
+        ds = FashionMNISTDataModule(ds=FashionMNISTPair, batch_size=512)
+        model = HclModel(lr=1e-3, ds_memory=DataLoader(ds.ds['train_labeled'], batch_size=16))
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
