@@ -236,6 +236,7 @@ class Finetuner(pl.LightningModule):
 
         # load base model
         model = HclModel(lr=self.lr)
+        LOGGER.info(f"Load pretrained HCL model from {pretrained_path}")
         model.load_from_checkpoint(pretrained_path, map_location=DEV)
         for param in model.encoder.parameters():
             param.requires_grad = train_encoder
