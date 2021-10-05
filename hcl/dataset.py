@@ -32,7 +32,7 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                  im_size: Union[Tuple[int, int], int] = 28,
                  data_dir: str = os.path.join(os.getcwd(), "FashionMNIST_data"),
                  num_workers: int = mp.cpu_count(),
-                 splits: Tuple[int, int, int] = (57000, 2000, 1000),
+                 splits: Tuple[int, int, int] = (55000, 4000, 1000),
                  supervised: bool = False):
         """
         Initialization
