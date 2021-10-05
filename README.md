@@ -18,7 +18,7 @@ In order minimize the amount of labeled data, I have chosen to use an unsupervis
 unsupervised fashion, is then finetuned (in a supervised way) on labeled samples in order to reach >90% on the test set.
 
 There is a lot of work on unsupervised methods in the literature, I have chosen to follow [this paper](https://arxiv.org/pdf/2010.04592.pdf) as I have some
-previous experience on the topic (Hard Contrastive Learning), there is code available from which we can start building
+previous experience on the topic (Hard Contrastive Learning) and there is code available from which we can start building
 our solution.
 
 The training dataset (60000 images) is split into:
