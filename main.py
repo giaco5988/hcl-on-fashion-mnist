@@ -50,7 +50,7 @@ class Cli:
         """
         # initialize data and model
         ds = FashionMNISTDataModule(ds=FashionMNISTPair, supervised=True, batch_size=16)
-        model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path))
+        model = Finetuner(lr=1e-3, pretrained_path=os.path.join(os.getcwd(), pretrained_path), train_encoder=True)
 
         # initialize trainer and run it
         gpus = torch.cuda.device_count()
