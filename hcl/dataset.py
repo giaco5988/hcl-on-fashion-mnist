@@ -32,7 +32,7 @@ class FashionMNISTDataModule(pl.LightningDataModule):
                  im_size: Union[Tuple[int, int], int] = 28,
                  data_dir: str = os.path.join(os.getcwd(), "FashionMNIST_data"),
                  num_workers: int = mp.cpu_count(),
-                 splits: Tuple[int, int] = (57000, 2000, 1000),
+                 splits: Tuple[int, int, int] = (57000, 2000, 1000),
                  supervised: bool = False):
         """
         Initialization
@@ -71,6 +71,7 @@ class FashionMNISTDataModule(pl.LightningDataModule):
         }
         for key, val in self.ds.items():
             LOGGER.info(f"{key} datasets has {len(val)} data-points")
+            assert len(set(x[-1] for x in val)) == len(ds_train_val.classes), f"Class missing from dataset"
 
     def train_dataloader(self):
         """get training data loader"""
