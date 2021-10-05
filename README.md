@@ -19,7 +19,12 @@ unsupervised fashion, is then finetuned (in a supervised way) on labeled samples
 
 There is a lot of work on unsupervised methods in the literature, I have chosen to follow [this paper](https://arxiv.org/pdf/2010.04592.pdf) as I have some
 previous experience on the topic (Hard Contrastive Learning), there is code available from which we can start building
-our solution. 
+our solution.
+
+The training dataset (60000 images) is split into:
+* 55000 unlabeled images used for training
+* 4000 labeled images used for training
+* 1000 labeled images used for validation
 
 ### Requirements
 * Python >=3.9 (previous versions might work but is not guaranteed)
@@ -51,7 +56,15 @@ Second, let's finetune on the labeled data
 
 NOTE: results are saved on `lightning_logs` folder.
 
-### Results
+### Results: test set accuracy 90% using 5000 labeled images
+
+Below, see results for training loss and validation accuracy for the **unsupervised** model
+![](docs/Screenshot from 2021-10-05 23-36-12.png)
+![](docs/Screenshot from 2021-10-05 23-36-21.png)
+
+Below, see results for training loss and validation accuracy for the **supervised** model
+![](docs/Screenshot from 2021-10-05 23-37-40.png)
+![](docs/Screenshot from 2021-10-05 23-37-34.png)
 
 ### Next Steps
 * Train for longer time
@@ -62,3 +75,4 @@ NOTE: results are saved on `lightning_logs` folder.
 * Add dvc-tracking to track data and pipelines
 * In order to reduce queries to database, can we understand which are the most effective (optimal) labels to query?
 E.g. those which are most difficult to classify. A first try could be to query those with low classification score.
+This is similar to what is done in active learning.
