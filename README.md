@@ -59,12 +59,12 @@ NOTE: results are saved on `lightning_logs` folder.
 ### Results: test set accuracy 90% using 5000 labeled images
 
 Below, see results for training loss and validation accuracy for the **unsupervised** model
-![](./docs/Screenshot from 2021-10-05 23-36-12.png)
-![](./docs/Screenshot from 2021-10-05 23-36-21.png)
+![](https://github.com/giaco5988/ntropy-ml-engineer/docs/Screenshot from 2021-10-05 23-36-12.png)
+![](https://github.com/giaco5988/ntropy-ml-engineer/docs/Screenshot from 2021-10-05 23-36-21.png)
 
 Below, see results for training loss and validation accuracy for the **supervised** model
-![](./docs/Screenshot from 2021-10-05 23-37-40.png)
-![](./docs/Screenshot from 2021-10-05 23-37-34.png)
+![](https://github.com/giaco5988/ntropy-ml-engineer/docs/Screenshot from 2021-10-05 23-37-40.png)
+![](https://github.com/giaco5988/ntropy-ml-engineer/docs/Screenshot from 2021-10-05 23-37-34.png)
 
 ### Next Steps
 * Train for longer time
