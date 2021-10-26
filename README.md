@@ -48,10 +48,12 @@ NOTE: results are saved on `lightning_logs` folder.
 ### Results: test set accuracy 90% using 5000 labeled images
 
 Below, see results for training loss and validation accuracy for the **unsupervised** model
+
 ![](https://github.com/giaco5988/hcl-on-fashion-mnist/blob/main/docs/Screenshot%20from%202021-10-05%2023-36-12.png)
 ![](https://github.com/giaco5988/hcl-on-fashion-mnist/blob/main/docs/Screenshot%20from%202021-10-05%2023-36-21.png)
 
 Below, see results for training loss and validation accuracy for the **supervised** model
+
 ![](https://github.com/giaco5988/hcl-on-fashion-mnist/blob/main/docs/Screenshot%20from%202021-10-05%2023-37-40.png)
 ![](https://github.com/giaco5988/hcl-on-fashion-mnist/blob/main/docs/Screenshot%20from%202021-10-05%2023-37-34.png)
 
